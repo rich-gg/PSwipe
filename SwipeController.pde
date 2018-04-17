@@ -42,7 +42,7 @@ public class SwipeController {
     //create slide position arraylist
     slidesPos = new ArrayList<PVector>();
     for (int i = 0; i < slides.size(); i++) {
-      //windowsPos.add(new PVector (i * width, 0));
+       
       if (continuous) {
 
         if (i == 0) {
