@@ -12,13 +12,18 @@ public class Slide {
 
   public Slide(int id) {
     this.id  = id;
-    this.pos = new PVector(id * width, 0);
+    this.pos = new PVector(0, 0);
     this.targetPos = new PVector(0, 0);
     this.bgcolor = color(
       random(50, 100), 
       random(50, 100), 
       random(50, 100)
       );
+  }
+  
+  public void setInitPos(PVector initPos) {
+
+    this.pos = new PVector(initPos.x, initPos.y);
   }
 
   public void run() {
