@@ -171,7 +171,7 @@ public class SwipeController {
           deltaVect.x =  deltaVect.x / (Math.abs(deltaVect.x) / width + 1);
         } 
 
-        if (index-1 > 0 ) {
+        if (index-1 >= 0 ) {
           translateSlide(index-1, deltaVect.x + slidesPos.get(index-1).x, 0);
         }
 
