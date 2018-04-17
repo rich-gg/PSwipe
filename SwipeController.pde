@@ -13,8 +13,14 @@ public class SwipeController {
   private boolean continuous;       // looping or not looping
   //////////////////////////////////////////////////////////////////
 
-  public String eventType = ""; // check mouse/touch events starttouch/move etc...
-  private int index = startSlide;
+
+  public static final int EVENT_STARTPRESS = 1;
+  public static final int EVENT_PRESSED = 2;
+  public static final int EVENT_ENDPRESS = 3;
+
+
+  public int eventType = 0; // check mouse/touch events starttouch/move etc...
+  private int index;
   private PVector startVect = new PVector(0, 0);
   private int startTime;
 
@@ -26,12 +32,12 @@ public class SwipeController {
   ///////////////////////////////////////////////////////////////////////////
 
   //CONSTRUCTOR
-  
+
   public SwipeController(int slidesCount, int startSlide, int speed, boolean continuous) {
     this.slidesCount = slidesCount;
-    this.startSlide = startSlide;
     this.speed = speed;
     this.continuous = continuous;
+    index = startSlide;
 
     //create slides (aka windows)
     slides = new ArrayList<Slide>();
@@ -42,39 +48,46 @@ public class SwipeController {
     //create slide position arraylist
     slidesPos = new ArrayList<PVector>();
     for (int i = 0; i < slides.size(); i++) {
-       
+
       if (continuous) {
 
-        if (i == 0) {
+        if (i == index) {
           slidesPos.add(new PVector (0, 0));
-        } else if (i == slides.size()) {
+        } else if (i == slides.size()-1) {
           slidesPos.add(new PVector ( -width, 0));
-        } else {
+        } else if (i != slides.size() && i > index) {
           slidesPos.add(new PVector (width, 0));
+        } else if (i != index && i < index) {
+          slidesPos.add(new PVector (-width, 0));
         }
       } else { 
-        if (i == 0) {
+
+        if (i == index) {
           slidesPos.add(new PVector (0, 0));
-        } else {
+        } else if ( i > index) {
           slidesPos.add(new PVector (width, 0));
+        } else if ( i < index) {
+          slidesPos.add(new PVector (-width, 0));
         }
       }
+
+      slides.get(i).setInitPos(slidesPos.get(i));
     }
 
     // reposition elements before and after index
     if (continuous ) {
-      move(continuousIndex(index-1), -width, 0);
-      move(continuousIndex(index+1), width, 0);
+      move(getLoopedIndex(index-1), -width, 0);
+      move(getLoopedIndex(index+1), width, 0);
     }
   }
 
 
   //FUNCTIONS
 
-   public void run() {
+  public void run() {
     //keep the slides running
-    for (int i = 0; i < slides.size(); i++) {
-      slides.get(i).run();
+    for (Slide s : slides) { 
+      s.run ();
     }
 
     //monitor mouse/touch events
@@ -86,19 +99,21 @@ public class SwipeController {
   private void eventHandler() {
 
     switch(eventType) {
-    case "": 
+    case 0: 
 
       break;
-    case "startpress": 
+    case EVENT_STARTPRESS: 
 
       isScrolling = UNDEFINED;
       starting();
       break;
-    case "pressed": 
+
+    case EVENT_PRESSED: 
 
       moving();
       break;
-    case "endpress": 
+
+    case EVENT_ENDPRESS: 
 
       ending();
       break;
@@ -106,7 +121,7 @@ public class SwipeController {
 
     //keep eventType to "pressed" ON 
     if (mousePressed) {
-      eventType = "pressed";
+      eventType = EVENT_PRESSED;
     }
   }
 
@@ -139,9 +154,9 @@ public class SwipeController {
 
       if (continuous) { // we don't add resistance at the end
         //move the current, the one before and the one after
-        translateSlide(continuousIndex(index-1), deltaVect.x + slidesPos.get(continuousIndex(index-1)).x, 0);
-        translateSlide(index, deltaVect.x + slidesPos.get(continuousIndex(index)).x, 0);
-        translateSlide(continuousIndex(index+1), deltaVect.x + slidesPos.get(continuousIndex(index+1)).x, 0);
+        translateSlide(getLoopedIndex(index-1), deltaVect.x + slidesPos.get(getLoopedIndex(index-1)).x, 0);
+        translateSlide(index, deltaVect.x + slidesPos.get(getLoopedIndex(index)).x, 0);
+        translateSlide(getLoopedIndex(index+1), deltaVect.x + slidesPos.get(getLoopedIndex(index+1)).x, 0);
       } else {
 
         // increase resistance if first or last slide
@@ -199,8 +214,8 @@ public class SwipeController {
         if (direction < 0) {// if we're moving -----------------------------------RIGHT-----------------------------------
 
           if (continuous) { // we need to get the next in this direction in place
-            move(continuousIndex(index-1), -width, 0);
-            move(continuousIndex(index+2), width, 0);
+            move(getLoopedIndex(index-1), -width, 0);
+            move(getLoopedIndex(index+2), width, 0);
           } else {
 
             if (index-1 > 0 ) {
@@ -209,14 +224,14 @@ public class SwipeController {
           }
 
           move(index, slidesPos.get(index).x-width, speed);
-          move(continuousIndex(index+1), slidesPos.get(continuousIndex(index+1)).x-width, speed);
-          index = continuousIndex(index+1);
+          move(getLoopedIndex(index+1), slidesPos.get(getLoopedIndex(index+1)).x-width, speed);
+          index = getLoopedIndex(index+1);
         } else {           // if we're moving -----------------------------------LEFT-----------------------------------
 
           if (continuous) { // we need to get the next in this direction in place
 
-            move(continuousIndex(index+1), width, 0);
-            move(continuousIndex(index-2), -width, 0);
+            move(getLoopedIndex(index+1), width, 0);
+            move(getLoopedIndex(index-2), -width, 0);
           } else {
 
             if (index+1 < slides.size()) {
@@ -225,17 +240,17 @@ public class SwipeController {
           }
 
           move(index, slidesPos.get(index).x+width, speed);
-          move(continuousIndex(index-1), slidesPos.get(continuousIndex(index-1)).x+width, speed);
-          index = continuousIndex(index-1);
+          move(getLoopedIndex(index-1), slidesPos.get(getLoopedIndex(index-1)).x+width, speed);
+          index = getLoopedIndex(index-1);
         }
 
         // runCallback(getPos(), slides[index], direction); //didn't get this one...
       } else {             // if we -----------------------------------SET BACK-----------------------------------
 
         if (continuous) {
-          move(continuousIndex(index-1), -width, speed);
+          move(getLoopedIndex(index-1), -width, speed);
           move(index, 0, speed);
-          move(continuousIndex(index+1), width, speed);
+          move(getLoopedIndex(index+1), width, speed);
         } else {
 
           if (index-1 > 0 ) {
@@ -252,13 +267,13 @@ public class SwipeController {
     }
 
     //reset evenType
-    eventType = "";
+    eventType = 0;
   }
 
 
   //////////////////////////////
 
-  private int continuousIndex(int index) {
+  private int getLoopedIndex(int index) {
     // used to loop the index in "continuous"
     // a simple positive modulo using slides.length
     return (slidesCount + (index % slidesCount)) % slidesCount;
@@ -278,12 +293,12 @@ public class SwipeController {
 
   /////////////////////////////////BUTTON CONTROLS///////////////////////////////////
 
-   public void next() {
+  public void next() {
     if (index != slides.size() - 1 || continuous) {
 
       if (continuous) { // we need to get the next in this direction in place
-        move(continuousIndex(index-1), -width, 0);
-        move(continuousIndex(index+2), width, 0);
+        move(getLoopedIndex(index-1), -width, 0);
+        move(getLoopedIndex(index+2), width, 0);
       } else {
 
         if (index-1 > 0 ) {
@@ -292,8 +307,8 @@ public class SwipeController {
       }
 
       move(index, slidesPos.get(index).x-width, speed);
-      move(continuousIndex(index+1), slidesPos.get(continuousIndex(index+1)).x-width, speed);
-      index = continuousIndex(index+1);
+      move(getLoopedIndex(index+1), slidesPos.get(getLoopedIndex(index+1)).x-width, speed);
+      index = getLoopedIndex(index+1);
     }
   }
 
@@ -302,8 +317,8 @@ public class SwipeController {
 
       if (continuous) { // we need to get the next in this direction in place
 
-        move(continuousIndex(index+1), width, 0);
-        move(continuousIndex(index-2), -width, 0);
+        move(getLoopedIndex(index+1), width, 0);
+        move(getLoopedIndex(index-2), -width, 0);
       } else {
 
         if (index+1 < slides.size()) {
@@ -312,8 +327,8 @@ public class SwipeController {
       }
 
       move(index, slidesPos.get(index).x+width, speed);
-      move(continuousIndex(index-1), slidesPos.get(continuousIndex(index-1)).x+width, speed);
-      index = continuousIndex(index-1);
+      move(getLoopedIndex(index-1), slidesPos.get(getLoopedIndex(index-1)).x+width, speed);
+      index = getLoopedIndex(index-1);
     }
   }
 }
