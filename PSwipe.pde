@@ -8,9 +8,9 @@
 
 //////////////////////////////PARAMS///////////////////////////////////////
 private int slidesCount = 5;          // amount of slides
-private int startSlide = 0;           // slide to start from
+private int startSlide = 4;           // slide to start from (must be between 0 and slidesCount -1 !)
 private int speed = 300;              // time to move to next/prev slide
-private boolean continuous = true;    // looping or not looping
+private boolean continuous = true;   // looping or not looping
 
 
 SwipeController swiper;
@@ -31,12 +31,12 @@ void draw() {
 
 void mousePressed() {
 
-  swiper.eventType = "startpress";
+  swiper.eventType = SwipeController.EVENT_STARTPRESS;
 }
 
 void mouseReleased() {
 
-  swiper.eventType = "endpress";
+  swiper.eventType = SwipeController.EVENT_ENDPRESS;
 }
 
 void keyPressed() {
