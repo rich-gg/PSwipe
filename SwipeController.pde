@@ -1,8 +1,8 @@
 public class SwipeController {
 
   //GLOBAL PARAMS
-  private ArrayList<Window> windows;
-  private ArrayList<PVector> windowsPos;
+  private ArrayList<Slide> slides;
+  private ArrayList<PVector> slidesPos;
 
   private PVector deltaVect = new PVector(0, 0);
 
@@ -34,29 +34,29 @@ public class SwipeController {
     this.continuous = continuous;
 
     //create slides (aka windows)
-    windows = new ArrayList<Window>();
+    slides = new ArrayList<Slide>();
     for (int i = 0; i < slidesCount; i++) {
-      windows.add(new Window(i));
+      slides.add(new Slide(i));
     }
 
     //create slide position arraylist
-    windowsPos = new ArrayList<PVector>();
-    for (int i = 0; i < windows.size(); i++) {
+    slidesPos = new ArrayList<PVector>();
+    for (int i = 0; i < slides.size(); i++) {
       //windowsPos.add(new PVector (i * width, 0));
       if (continuous) {
 
         if (i == 0) {
-          windowsPos.add(new PVector (0, 0));
-        } else if (i == windows.size()) {
-          windowsPos.add(new PVector ( -width, 0));
+          slidesPos.add(new PVector (0, 0));
+        } else if (i == slides.size()) {
+          slidesPos.add(new PVector ( -width, 0));
         } else {
-          windowsPos.add(new PVector (width, 0));
+          slidesPos.add(new PVector (width, 0));
         }
       } else { 
         if (i == 0) {
-          windowsPos.add(new PVector (0, 0));
+          slidesPos.add(new PVector (0, 0));
         } else {
-          windowsPos.add(new PVector (width, 0));
+          slidesPos.add(new PVector (width, 0));
         }
       }
     }
@@ -73,8 +73,8 @@ public class SwipeController {
 
    public void run() {
     //keep the slides running
-    for (int i = 0; i < windows.size(); i++) {
-      windows.get(i).run();
+    for (int i = 0; i < slides.size(); i++) {
+      slides.get(i).run();
     }
 
     //monitor mouse/touch events
@@ -139,16 +139,16 @@ public class SwipeController {
 
       if (continuous) { // we don't add resistance at the end
         //move the current, the one before and the one after
-        translateSlide(continuousIndex(index-1), deltaVect.x + windowsPos.get(continuousIndex(index-1)).x, 0);
-        translateSlide(index, deltaVect.x + windowsPos.get(continuousIndex(index)).x, 0);
-        translateSlide(continuousIndex(index+1), deltaVect.x + windowsPos.get(continuousIndex(index+1)).x, 0);
+        translateSlide(continuousIndex(index-1), deltaVect.x + slidesPos.get(continuousIndex(index-1)).x, 0);
+        translateSlide(index, deltaVect.x + slidesPos.get(continuousIndex(index)).x, 0);
+        translateSlide(continuousIndex(index+1), deltaVect.x + slidesPos.get(continuousIndex(index+1)).x, 0);
       } else {
 
         // increase resistance if first or last slide
         if (index == 0  && deltaVect.x > 0 ) {                                //if first slide and sliding left
 
           deltaVect.x =  deltaVect.x / (Math.abs(deltaVect.x) / width + 1);
-        } else if (index == windows.size()-1  && deltaVect.x < 0) {          //or if last slide and sliding right
+        } else if (index == slides.size()-1  && deltaVect.x < 0) {          //or if last slide and sliding right
 
           deltaVect.x =  deltaVect.x / (Math.abs(deltaVect.x) / width + 1);
         } else if (Math.abs(deltaVect.x) < 0) {                               //and if (not ?!) sliding at all
@@ -157,13 +157,13 @@ public class SwipeController {
         } 
 
         if (index-1 > 0 ) {
-          translateSlide(index-1, deltaVect.x + windowsPos.get(index-1).x, 0);
+          translateSlide(index-1, deltaVect.x + slidesPos.get(index-1).x, 0);
         }
 
-        translateSlide(index, deltaVect.x + windowsPos.get(index).x, 0);
+        translateSlide(index, deltaVect.x + slidesPos.get(index).x, 0);
 
-        if (index+1 < windows.size()) {
-          translateSlide(index+1, deltaVect.x + windowsPos.get(index+1).x, 0);
+        if (index+1 < slides.size()) {
+          translateSlide(index+1, deltaVect.x + slidesPos.get(index+1).x, 0);
         }
       }
     }
@@ -182,7 +182,7 @@ public class SwipeController {
     // determine if slide attempt is past start and end
     boolean isPastBounds =
       index == 0 && deltaVect.x > 0 ||                      // if first slide and slide amt is greater than 0
-      index == windows.size() - 1 && deltaVect.x < 0;   // or if last slide and slide amt is less than 0
+      index == slides.size() - 1 && deltaVect.x < 0;   // or if last slide and slide amt is less than 0
     if (continuous) {
       isPastBounds = false;
     }
@@ -208,8 +208,8 @@ public class SwipeController {
             }
           }
 
-          move(index, windowsPos.get(index).x-width, speed);
-          move(continuousIndex(index+1), windowsPos.get(continuousIndex(index+1)).x-width, speed);
+          move(index, slidesPos.get(index).x-width, speed);
+          move(continuousIndex(index+1), slidesPos.get(continuousIndex(index+1)).x-width, speed);
           index = continuousIndex(index+1);
         } else {           // if we're moving -----------------------------------LEFT-----------------------------------
 
@@ -219,13 +219,13 @@ public class SwipeController {
             move(continuousIndex(index-2), -width, 0);
           } else {
 
-            if (index+1 < windows.size()) {
+            if (index+1 < slides.size()) {
               move(index+1, width, 0);
             }
           }
 
-          move(index, windowsPos.get(index).x+width, speed);
-          move(continuousIndex(index-1), windowsPos.get(continuousIndex(index-1)).x+width, speed);
+          move(index, slidesPos.get(index).x+width, speed);
+          move(continuousIndex(index-1), slidesPos.get(continuousIndex(index-1)).x+width, speed);
           index = continuousIndex(index-1);
         }
 
@@ -244,7 +244,7 @@ public class SwipeController {
 
           move(index, 0, speed);
 
-          if (index+1 < windows.size()) {
+          if (index+1 < slides.size()) {
             move(index+1, width, speed);
           }
         }
@@ -268,18 +268,18 @@ public class SwipeController {
 
     translateSlide(index, dist, speed);
 
-    windowsPos.get(index).x = dist;
+    slidesPos.get(index).x = dist;
   }
 
   void translateSlide(int index, float dist, int speed) {
 
-    windows.get(index).moveIt(dist, speed);
+    slides.get(index).moveIt(dist, speed);
   }
 
   /////////////////////////////////BUTTON CONTROLS///////////////////////////////////
 
    public void next() {
-    if (index != windows.size() - 1 || continuous) {
+    if (index != slides.size() - 1 || continuous) {
 
       if (continuous) { // we need to get the next in this direction in place
         move(continuousIndex(index-1), -width, 0);
@@ -291,8 +291,8 @@ public class SwipeController {
         }
       }
 
-      move(index, windowsPos.get(index).x-width, speed);
-      move(continuousIndex(index+1), windowsPos.get(continuousIndex(index+1)).x-width, speed);
+      move(index, slidesPos.get(index).x-width, speed);
+      move(continuousIndex(index+1), slidesPos.get(continuousIndex(index+1)).x-width, speed);
       index = continuousIndex(index+1);
     }
   }
@@ -306,13 +306,13 @@ public class SwipeController {
         move(continuousIndex(index-2), -width, 0);
       } else {
 
-        if (index+1 < windows.size()) {
+        if (index+1 < slides.size()) {
           move(index+1, width, 0);
         }
       }
 
-      move(index, windowsPos.get(index).x+width, speed);
-      move(continuousIndex(index-1), windowsPos.get(continuousIndex(index-1)).x+width, speed);
+      move(index, slidesPos.get(index).x+width, speed);
+      move(continuousIndex(index-1), slidesPos.get(continuousIndex(index-1)).x+width, speed);
       index = continuousIndex(index-1);
     }
   }
